@@ -33,59 +33,6 @@
         "Built": "R 4.5.2; ; 2025-12-18 00:53:12 UTC; windows"
       }
     },
-    "BiocManager": {
-      "Source": "CRAN",
-      "Repository": "https://cran.rstudio.com",
-      "description": {
-        "Package": "BiocManager",
-        "Title": "Access the Bioconductor Project Package Repository",
-        "Description": "A convenient tool to install and update Bioconductor packages.",
-        "Version": "1.30.27",
-        "Authors@R": "c(\n    person(\"Martin\", \"Morgan\", email = \"martin.morgan@roswellpark.org\",\n        role = \"aut\", comment = c(ORCID = \"0000-0002-5874-8148\")),\n    person(\"Marcel\", \"Ramos\", email = \"marcel.ramos@sph.cuny.edu\",\n        role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-3242-0582\")))",
-        "Imports": "utils",
-        "Suggests": "BiocVersion, BiocStyle, remotes, rmarkdown, testthat, withr,\ncurl, knitr",
-        "URL": "https://bioconductor.github.io/BiocManager/",
-        "BugReports": "https://github.com/Bioconductor/BiocManager/issues",
-        "VignetteBuilder": "knitr",
-        "License": "Artistic-2.0",
-        "Encoding": "UTF-8",
-        "RoxygenNote": "7.3.2",
-        "NeedsCompilation": "no",
-        "Packaged": "2025-11-13 19:48:09 UTC; mramos",
-        "Author": "Martin Morgan [aut] (ORCID: <https://orcid.org/0000-0002-5874-8148>),\n  Marcel Ramos [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-3242-0582>)",
-        "Maintainer": "Marcel Ramos <marcel.ramos@sph.cuny.edu>",
-        "Repository": "CRAN",
-        "Date/Publication": "2025-11-14 08:30:02 UTC",
-        "Built": "R 4.5.2; ; 2026-01-23 01:49:42 UTC; windows"
-      }
-    },
-    "BiocVersion": {
-      "Source": "Bioconductor",
-      "Repository": "https://bioconductor.org/packages/3.21/bioc",
-      "description": {
-        "Package": "BiocVersion",
-        "Version": "3.21.1",
-        "Title": "Set the appropriate version of Bioconductor packages",
-        "Description": "This package provides repository information for the appropriate\n    version of Bioconductor. ",
-        "Authors@R": "c(\n    person(\"Martin\", \"Morgan\", email = \"martin.morgan@roswellpark.org\",\n        role = \"aut\"),\n    person(\"Marcel\", \"Ramos\", email = \"marcel.ramos@sph.cuny.edu\",\n        role = \"ctb\"),\n    person(\"Bioconductor\", \"Package Maintainer\",\n        email  = \"maintainer@bioconductor.org\",\n        role = c(\"ctb\", \"cre\")))",
-        "biocViews": "Infrastructure",
-        "Depends": "R (>= 4.5.0)",
-        "License": "Artistic-2.0",
-        "Encoding": "UTF-8",
-        "RoxygenNote": "6.0.1",
-        "git_url": "https://git.bioconductor.org/packages/BiocVersion",
-        "git_branch": "devel",
-        "git_last_commit": "1e5e5af",
-        "git_last_commit_date": "2024-10-29",
-        "Repository": "Bioconductor 3.21",
-        "Date/Publication": "2025-03-25",
-        "NeedsCompilation": "no",
-        "Packaged": "2025-03-25 21:43:08 UTC; biocbuild",
-        "Author": "Martin Morgan [aut],\n  Marcel Ramos [ctb],\n  Bioconductor Package Maintainer [ctb, cre]",
-        "Maintainer": "Bioconductor Package Maintainer <maintainer@bioconductor.org>",
-        "Built": "R 4.5.0; ; 2025-03-26 11:48:01 UTC; windows"
-      }
-    },
     "DT": {
       "Source": "CRAN",
       "Repository": "https://cran.rstudio.com",
@@ -4090,12 +4037,12 @@
       }
     },
     "recipes": {
-      "Source": "Bioconductor",
+      "Source": "CRAN",
       "Repository": "https://cran.rstudio.com",
       "description": {
         "Package": "recipes",
         "Title": "Preprocessing and Feature Engineering Steps for Modeling",
-        "Version": "1.3.2",
+        "Version": "1.3.3",
         "Authors@R": "c(\n    person(\"Max\", \"Kuhn\", , \"max@posit.co\", role = c(\"aut\", \"cre\")),\n    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = \"aut\"),\n    person(\"Emil\", \"Hvitfeldt\", , \"emil.hvitfeldt@posit.co\", role = \"aut\"),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"),\n           comment = c(ROR = \"03wc8by49\"))\n  )",
         "Description": "A recipe prepares your data for modeling. We provide an\n    extensible framework for pipeable sequences of feature engineering\n    steps provides preprocessing tools to be applied to data. Statistical\n    parameters for the steps can be estimated from an initial data set and\n    then applied to other data sets. The resulting processed output can\n    then be used as inputs for statistical or machine learning models.",
         "License": "MIT + file LICENSE",
@@ -4103,27 +4050,21 @@
         "BugReports": "https://github.com/tidymodels/recipes/issues",
         "Depends": "dplyr (>= 1.1.0), R (>= 4.1)",
         "Imports": "cli, clock (>= 0.6.1), generics (>= 0.1.2), glue, gower,\nhardhat (>= 1.4.1), ipred (>= 0.9-12), lifecycle (>= 1.0.3),\nlubridate (>= 1.8.0), magrittr, Matrix, purrr (>= 1.0.0), rlang\n(>= 1.1.0), sparsevctrs (>= 0.3.3), stats, tibble, tidyr (>=\n1.0.0), tidyselect (>= 1.2.0), timeDate, utils, vctrs (>=\n0.5.0), withr",
-        "Suggests": "covr, ddalpha, dials (>= 1.2.0), dimRed, fastICA, ggplot2,\nigraph (>= 2.1.1), kernlab, knitr, methods, modeldata (>=\n0.1.1), parsnip (>= 1.2.0), RANN, RcppRoll, rmarkdown, rpart,\nrsample, RSpectra, splines2, testthat (>= 3.3.0), workflows,\nxml2",
+        "Suggests": "covr, ddalpha, dials (>= 1.2.0), dimRed, fastICA, ggplot2,\nigraph (>= 2.1.1), kernlab, knitr, methods, mixOmics, modeldata\n(>= 0.1.1), parsnip (>= 1.2.0), RANN, RcppRoll, rmarkdown,\nrpart, rsample, RSpectra, splines2, testthat (>= 3.3.0),\nworkflows, xml2",
         "VignetteBuilder": "knitr",
         "RdMacros": "lifecycle",
-        "biocViews": "mixOmics",
         "Config/Needs/website": "tidyverse/tidytemplate, rmarkdown",
         "Config/testthat/edition": "3",
         "Config/usethis/last-upkeep": "2025-04-23",
         "Encoding": "UTF-8",
-        "RoxygenNote": "7.3.3",
+        "Config/roxygen2/version": "8.0.0",
         "NeedsCompilation": "no",
-        "Packaged": "2026-04-01 17:40:17 UTC; emilhvitfeldt",
+        "Packaged": "2026-05-30 09:44:09 UTC; max",
         "Author": "Max Kuhn [aut, cre],\n  Hadley Wickham [aut],\n  Emil Hvitfeldt [aut],\n  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>)",
         "Maintainer": "Max Kuhn <max@posit.co>",
         "Repository": "CRAN",
-        "Date/Publication": "2026-04-02 12:20:02 UTC",
-        "Built": "R 4.5.3; ; 2026-05-20 04:30:30 UTC; windows",
-        "RemoteType": "standard",
-        "RemotePkgRef": "recipes",
-        "RemoteRef": "recipes",
-        "RemoteRepos": "https://cran.rstudio.com",
-        "RemoteSha": "1.3.2"
+        "Date/Publication": "2026-05-30 10:50:02 UTC",
+        "Built": "R 4.5.3; ; 2026-07-06 04:48:28 UTC; windows"
       }
     },
     "reformulas": {
