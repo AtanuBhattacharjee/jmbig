@@ -6,7 +6,7 @@
 # ============================================================================
 library(shiny); library(jmBIG); library(JMbayes2); library(nlme); library(survival)
 
-sim <- function(n, seed = 1, lambda = 0.1, alpha = 0.5, tmax = 8) {
+sim <- function(n, seed = 1, lambda = 0.1, alpha = 0.5, tmax = 8, resid_sd = 0.6) {
   set.seed(seed); D <- matrix(c(1, .1, .1, .3), 2); x1 <- rbinom(n, 1, .5)
   b <- MASS::mvrnorm(n, c(0, 0), D); e0 <- 5 + b[, 1] + .5 * x1; e1 <- -.3 + b[, 2]
   A <- lambda * exp(.3 * x1 + alpha * (e0 - 5)); bc <- alpha * e1; u <- runif(n)
@@ -15,10 +15,13 @@ sim <- function(n, seed = 1, lambda = 0.1, alpha = 0.5, tmax = 8) {
   ot <- pmin(Te, tmax); st <- as.integer(Te <= tmax); g <- seq(0, tmax, .5)
   L <- do.call(rbind, lapply(1:n, function(i) {
     v <- g[g <= ot[i]]; if (!length(v)) v <- 0
-    data.frame(id = i, visit = v, x1 = x1[i], y = e0[i] + e1[i] * v + rnorm(length(v), 0, .6))
+    data.frame(id = i, visit = v, x1 = x1[i], y = e0[i] + e1[i] * v + rnorm(length(v), 0, resid_sd))
   }))
   list(dl = L, ds = data.frame(id = 1:n, time = ot, status = st, x1 = x1), tmax = tmax)
 }
+
+# defaults for the data-generating assumptions (single source of truth)
+DEF <- list(n = 300, alpha = 0.5, lambda = 0.10, tmax = 8, resid_sd = 0.6, seed = 1)
 
 fitbig <- function(dl, ds)
   jmbayesBig(data.frame(dl), data.frame(ds), y ~ visit + x1,
@@ -44,9 +47,18 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       helpText("1. Simulate a dataset, 2. Fit the model, 3. Explore a patient."),
-      sliderInput("n", "patients", 100, 1000, 300, 100),
-      sliderInput("alpha", "association (alpha)", -1, 1, 0.5, 0.1),
+      tags$h4("Data-generating assumptions"),
+      helpText("Defaults below give a well-behaved dataset (~30-40% events). ",
+               "Change any assumption to stress-test the pipeline, then Generate."),
+      sliderInput("n", "patients (n)", 100, 1000, DEF$n, 100),
+      sliderInput("alpha", "association (alpha): biomarker \u2192 hazard",
+                  -1, 1, DEF$alpha, 0.1),
+      sliderInput("lambda", "baseline hazard (lambda)", 0.02, 0.5, DEF$lambda, 0.02),
+      sliderInput("tmax", "max follow-up (tmax)", 4, 16, DEF$tmax, 1),
+      sliderInput("resid_sd", "biomarker measurement noise (SD)", 0.1, 2, DEF$resid_sd, 0.1),
+      numericInput("seed", "random seed", DEF$seed, min = 1, step = 1),
       actionButton("gen", "Generate data", class = "btn-primary"),
+      actionLink("reset", "reset to defaults"),
       tags$hr(),
       actionButton("fit", "Fit model", class = "btn-success"),
       tags$hr(),
@@ -54,6 +66,22 @@ ui <- fluidPage(
     ),
     mainPanel(
       tabsetPanel(
+        tabPanel("Generated data",
+          br(),
+          helpText("Preview the simulated data before fitting."),
+          verbatimTextOutput("data_summary"),
+          br(),
+          fluidRow(
+            column(6, downloadButton("dl_ds", "Download subject-level (CSV)")),
+            column(6, downloadButton("dl_dl", "Download longitudinal (CSV)"))
+          ),
+          br(),
+          tags$h4("Subject-level data \u2014 time to event"),
+          helpText("id, time, status (1 = event, 0 = censored), x1 (binary covariate). First 100 rows."),
+          tableOutput("tbl_ds"),
+          tags$h4("Longitudinal biomarker data"),
+          helpText("id, visit time, x1, y (biomarker). First 100 rows \u2014 use the download button for the full dataset."),
+          tableOutput("tbl_dl")),
         tabPanel("Individual prediction",
           br(),
           plotOutput("pl", height = "360px"),
@@ -62,8 +90,8 @@ ui <- fluidPage(
         tabPanel("Cohort prediction error",
           br(),
           fluidRow(
-            column(4, numericInput("coh_L", "landmark time", 2, 0.5, 7, 0.5)),
-            column(4, numericInput("coh_dt", "horizon window", 3, 0.5, 6, 0.5)),
+            column(4, numericInput("coh_L", "landmark time", 2, 0.5, 15, 0.5)),
+            column(4, numericInput("coh_dt", "horizon window", 3, 0.5, 14, 0.5)),
             column(4, numericInput("coh_n", "patients to sample", 50, 10, 1000, 10))
           ),
           actionButton("coh_go", "Compute cohort error", class = "btn-warning"),
@@ -77,15 +105,56 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   rv <- reactiveValues(dl = NULL, ds = NULL, big = NULL, tmax = 8)
 
+  observeEvent(input$reset, {
+    updateSliderInput(session, "n", value = DEF$n)
+    updateSliderInput(session, "alpha", value = DEF$alpha)
+    updateSliderInput(session, "lambda", value = DEF$lambda)
+    updateSliderInput(session, "tmax", value = DEF$tmax)
+    updateSliderInput(session, "resid_sd", value = DEF$resid_sd)
+    updateNumericInput(session, "seed", value = DEF$seed)
+    showNotification("assumptions reset to defaults")
+  })
+
   observeEvent(input$gen, {
-    d <- sim(input$n, alpha = input$alpha); rv$dl <- d$dl; rv$ds <- d$ds
-    rv$tmax <- d$tmax; rv$big <- NULL
+    d <- sim(input$n, seed = input$seed, lambda = input$lambda, alpha = input$alpha,
+             tmax = input$tmax, resid_sd = input$resid_sd)
+    rv$dl <- d$dl; rv$ds <- d$ds; rv$tmax <- d$tmax; rv$big <- NULL
     showNotification(sprintf("n=%d, events=%.0f%%", input$n, 100 * mean(d$ds$status)))
   })
   observeEvent(input$fit, {
-    req(rv$dl); withProgress(message = "Fitting jmBIG…", value = .5, {
+    req(rv$dl); withProgress(message = "Fitting jmBIG\u2026", value = .5, {
       rv$big <- fitbig(rv$dl, rv$ds) }); showNotification("fitted")
   })
+
+  # ---- generated-data preview ----
+  output$data_summary <- renderText({
+    if (is.null(rv$ds)) return("Generate data to preview it here.")
+    ds <- rv$ds; dl <- rv$dl; vpp <- as.numeric(table(dl$id))
+    sprintf(
+      paste0("Subject-level rows (patients)   : %d\n",
+             "Longitudinal rows (visits)      : %d\n",
+             "Events (status = 1)             : %d  (%.1f%%)\n",
+             "Censored (status = 0)           : %d  (%.1f%%)\n",
+             "Median follow-up time           : %.2f\n",
+             "Follow-up range                 : %.2f to %.2f\n",
+             "Visits per patient (min/med/max): %.0f / %.0f / %.0f\n",
+             "Biomarker y range               : %.2f to %.2f"),
+      nrow(ds), nrow(dl),
+      sum(ds$status == 1), 100 * mean(ds$status == 1),
+      sum(ds$status == 0), 100 * mean(ds$status == 0),
+      median(ds$time), min(ds$time), max(ds$time),
+      min(vpp), median(vpp), max(vpp),
+      min(dl$y), max(dl$y))
+  })
+  output$tbl_ds <- renderTable({ req(rv$ds); head(rv$ds, 100) }, digits = 3)
+  output$tbl_dl <- renderTable({ req(rv$dl); head(rv$dl, 100) }, digits = 3)
+  output$dl_ds <- downloadHandler(
+    filename = function() "subject_level_data.csv",
+    content  = function(f) write.csv(rv$ds, f, row.names = FALSE))
+  output$dl_dl <- downloadHandler(
+    filename = function() "longitudinal_data.csv",
+    content  = function(f) write.csv(rv$dl, f, row.names = FALSE))
+
   output$pid <- renderUI({ req(rv$ds); selectInput("pid", "patient id", sort(unique(rv$ds$id))) })
   output$lm <- renderUI({
     req(rv$dl, input$pid)
@@ -158,7 +227,7 @@ server <- function(input, output, session) {
   # ---- cohort prediction error (overall, on demand) ----
   observeEvent(input$coh_go, {
     req(rv$big)
-    withProgress(message = "Scoring cohort…", value = 0.3, {
+    withProgress(message = "Scoring cohort\u2026", value = 0.3, {
       L <- input$coh_L; Th <- L + input$coh_dt
       elig <- rv$ds$id[rv$ds$time > L]                    # at risk at the landmark
       if (!length(elig)) { output$coh <- renderText("No patients at risk at this landmark."); return() }
